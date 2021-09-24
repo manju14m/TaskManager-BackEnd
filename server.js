@@ -4,6 +4,7 @@ import dotenv from "dotenv"
 import connectDB from "./config/Db.js"
 import TaskRouter from "./routes/TaskRoute.js"
 import UserRouter from "./routes/UserRoute.js"
+import auth from "./middleware/auth.js"
 
 dotenv.config()
 connectDB()
@@ -17,8 +18,8 @@ app.get("/",(req,res)=>{
   res.send("Welcome to Task manager")
 })
 
-app.use("/user", UserRouter)
-app.use("/tasks", TaskRouter)
+app.use("/tasks", auth, TaskRouter)
+app.use("/user", UserRouter )
 
 
 app.listen(PORT, ()=>console.log(`server is running on port ${PORT}`))

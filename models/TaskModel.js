@@ -3,6 +3,10 @@ import mongoose from "mongoose"
 // const {format} = pkg;
 
 const taskSchema = new mongoose.Schema({
+  user:{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'users'
+  },
   title:{
     type:String,
     required:true

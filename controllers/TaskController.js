@@ -1,45 +1,61 @@
 import Task from "../models/TaskModel.js"
 
 export const getAllTasks = async(req,res)=>{
-  const data = await Task.find()
-  console.log(data)
+  const data = await Task.find({user:req.user})
   res.json(data)
 }
 
-export const getTaskById = async(req,res)=>{
-  const data =await Task.findById(req.params.id)
-  if(data){
-    res.json(data)
-  }
-  else{
-    res.status(404)
-    throw new Error("Task Not Found")
-  }
-}
-
 export const updateTask = async(req,res)=>{
-  const data = await Task.findById(req.params.id)
-  if(data){
-    data.status = req.body.status
 
-    const UpdatedData = await data.save()
+  // let data = await Task.findById(req.params.id)
+  const {title, description, targetDate, status} = req.body
+  try {
+    let task = await Task.findById(req.params.id)
 
-    res.json(UpdatedData)
+    if (!task) return res.status(404).json({msg: 'Task not found'});
+
+    // Make sure user owns Task
+    
+    if (task.user.toString() !== req.user) {
+      return res.status(401).json({msg: 'Not authorized'});
+    }
+
+    task.title = title
+    task.description = description
+    task.targetDate = targetDate
+    task.status = status
+
+    const UpdatedTask = await task.save()
+    res.json(UpdatedTask)
   }
-  else{
-    res.status(404)
-    throw new Error("Task Not Found")
+   catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
   }
 }
+
+
 
 export const deleteTask = async(req,res)=>{
-  const data =await Task.findByIdAndDelete(req.params.id)
-  if(data){
+
+  try {
+    let task = await Task.findById(req.params.id)
+
+    if (!task) return res.status(404).json({msg: 'Task not found'});
+
+    // Make sure user owns Task
+    
+    if (task.user.toString() !== req.user) {
+      return res.status(401).json({msg: 'Not authorized'});
+    }
+
+    await Task.findByIdAndDelete(req.params.id)
+
     res.send("task deleted successfully")
   }
-  else{
-    res.status(404)
-    throw new Error("Task Not Found")
+   catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
   }
 }
 
@@ -47,6 +63,7 @@ export const addTask = async(req,res)=>{
   const {title, description, targetDate} = req.body
   
   const newTask = {
+    user:req.user,
     title,
     description,
     status: "To Do",
